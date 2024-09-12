@@ -26,17 +26,25 @@ namespace BookStoreApi.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Author>> GetAuthor(int id)
         {
-            var author = await _context.Authors.Include(a => a.Books).FirstOrDefaultAsync(a => a.Id == id);
+            var author = await _context.Authors.Include(a => a.Books)
+                                               .FirstOrDefaultAsync(a => a.Id == id);
+
             if (author == null)
             {
                 return NotFound();
             }
-            return author;
+
+            return Ok(author);
         }
 
         [HttpPost]
         public async Task<ActionResult<Author>> PostAuthor(Author author)
         {
+            if (string.IsNullOrWhiteSpace(author.Name))
+            {
+                return BadRequest();
+            }
+
             _context.Authors.Add(author);
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetAuthor), new { id = author.Id }, author);

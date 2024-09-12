@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace BookStoreApi.Tests.Data
 {
-    public class BookStoreContextTests : IDisposable
+    public class BookStoreContextTests //: IDisposable
     {
         private readonly BookStoreContext _context;
 
@@ -22,11 +22,11 @@ namespace BookStoreApi.Tests.Data
             _context.Database.EnsureCreated();
         }
 
-        public void Dispose()
+        /*public void Dispose()
         {
             _context.Database.EnsureDeleted();  // Apaga o banco de dados após cada teste
             _context.Dispose();                 // Libera os recursos utilizados pelo contexto
-        }
+        }*/
 
        [Fact]
         public void Author_ShouldHaveManyBooks()
@@ -39,29 +39,7 @@ namespace BookStoreApi.Tests.Data
             Assert.NotNull(author.Books);  // Garante que o autor tem livros
             Assert.True(author.Books.Count > 0);  // Verifica se o autor tem pelo menos um livro
         }
-
-        /*[Fact]
-        public void ShouldContainSeedData()
-        {
-            // Act
-            var author = _context.Authors.Find(1);
-            var book = _context.Books.Find(1);
-            var customerVip = _context.Customers.Find(1);
-            var customerNonVip = _context.Customers.Find(2);
-
-            // Assert
-            Assert.NotNull(author);
-            Assert.Equal("George Orwell", author.Name);
-
-            Assert.NotNull(book);
-            Assert.Equal("1984", book.Title);
-
-            Assert.NotNull(customerVip);
-            Assert.True(customerVip.IsVip);
-
-            Assert.NotNull(customerNonVip);
-            Assert.False(customerNonVip.IsVip);
-        }*/
+       
         
     }
 }

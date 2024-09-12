@@ -22,45 +22,51 @@ namespace BookStoreApi.Tests.Controllers
             _controller = new CustomersController(_context);
         }
 
-        [Fact]
-        public async Task GetCustomers_ShouldReturnEmptyList_WhenNoCustomersExist()
+        [Theory]
+        [InlineData(0, null, false)]  // Nenhum cliente existente
+        [InlineData(1, "John Doe", true)]  // Cliente existente
+        public async Task GetCustomersAndCustomer_ShouldReturnExpectedResults(int expectedCustomerCount, string customerName, bool isVip)
         {
             // Arrange
-            _context.Customers.RemoveRange(_context.Customers); // Limpa os clientes existentes
-            await _context.SaveChangesAsync();
+            if (expectedCustomerCount > 0)
+            {
+                var customer = new Customer { Id = 1, Name = customerName, IsVip = isVip };
+                _context.Customers.Add(customer);
+                await _context.SaveChangesAsync();
+            }
 
-            // Act
-            var result = await _controller.GetCustomers();
+            // Act - Testando a listagem de clientes
+            var resultList = await _controller.GetCustomers();
 
-            // Assert
-            Assert.IsType<ActionResult<IEnumerable<Customer>>>(result);
-            Assert.Empty(result.Value);  // Verifica se a lista está vazia
+            // Assert - Verificando a lista de clientes
+            Assert.IsType<ActionResult<IEnumerable<Customer>>>(resultList);
+            if (expectedCustomerCount == 0)
+            {
+                Assert.Empty(resultList.Value); // Verifica se a lista está vazia
+            }
+            else
+            {
+                Assert.NotEmpty(resultList.Value);
+
+                // Act - Testando o retorno de um cliente específico
+                var result = await _controller.GetCustomer(1);
+
+                // Assert - Verificando os detalhes do cliente retornado
+                var actionResult = Assert.IsType<ActionResult<Customer>>(result);
+                var returnValue = Assert.IsType<Customer>(actionResult.Value);
+                Assert.Equal(1, returnValue.Id);  // Verifica o ID
+                Assert.Equal(customerName, returnValue.Name);  // Verifica o Nome
+                Assert.Equal(isVip, returnValue.IsVip);  // Verifica o status de VIP
+            }
         }
 
-        [Fact]
-        public async Task GetCustomer_ShouldReturnCustomer_WhenCustomerExists()
+        [Theory]
+        [InlineData("Jane Doe", false)]  // Cliente não VIP
+        [InlineData("John Doe", true)]   // Cliente VIP
+        public async Task CreateCustomer_ShouldAddCustomerSuccessfully(string customerName, bool isVip)
         {
             // Arrange
-            var customer = new Customer { Id = 1, Name = "John Doe", IsVip = true };
-            _context.Customers.Add(customer);
-            await _context.SaveChangesAsync();
-
-            // Act
-            var result = await _controller.GetCustomer(1);
-
-            // Assert
-            var actionResult = Assert.IsType<ActionResult<Customer>>(result);
-            var returnValue = Assert.IsType<Customer>(actionResult.Value);
-            Assert.Equal(1, returnValue.Id);           // Verifica o ID
-            Assert.Equal("John Doe", returnValue.Name); // Verifica o Nome
-            Assert.True(returnValue.IsVip);            // Verifica o status de VIP
-        }
-
-        [Fact]
-        public async Task CreateCustomer_ShouldAddCustomerSuccessfully()
-        {
-            // Arrange
-            var customer = new Customer { Name = "Jane Doe", IsVip = false };
+            var customer = new Customer { Name = customerName, IsVip = isVip };
 
             // Act
             var result = await _controller.PostCustomer(customer);
@@ -68,15 +74,18 @@ namespace BookStoreApi.Tests.Controllers
             // Assert
             var actionResult = Assert.IsType<CreatedAtActionResult>(result.Result);
             var returnValue = Assert.IsType<Customer>(actionResult.Value);
-            Assert.Equal("Jane Doe", returnValue.Name); // Verifica o Nome
-            Assert.False(returnValue.IsVip);           // Verifica o status de VIP
+            Assert.Equal(customerName, returnValue.Name);  // Verifica o Nome
+            Assert.Equal(isVip, returnValue.IsVip);        // Verifica o status de VIP
         }
 
-        [Fact]
-        public async Task DeleteCustomer_ShouldRemoveCustomerSuccessfully()
+
+        [Theory]
+        [InlineData("John Doe", true)]  // Cliente VIP
+        [InlineData("Jane Doe", false)]  // Cliente não VIP
+        public async Task DeleteCustomer_ShouldRemoveCustomerSuccessfully(string customerName, bool isVip)
         {
             // Arrange
-            var customer = new Customer { Name = "John Doe", IsVip = true };
+            var customer = new Customer { Name = customerName, IsVip = isVip };
             _context.Customers.Add(customer);
             await _context.SaveChangesAsync();
 
@@ -87,6 +96,7 @@ namespace BookStoreApi.Tests.Controllers
             Assert.IsType<NoContentResult>(result);  // Verifica se a remoção foi bem-sucedida
             Assert.Null(await _context.Customers.FindAsync(customer.Id));  // Verifica se o cliente foi removido
         }
+
 
         public void Dispose()
         {
