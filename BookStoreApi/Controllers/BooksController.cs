@@ -1,4 +1,5 @@
 ﻿using BookStoreApi.Data;
+using BookStoreApi.Dtos;
 using BookStoreApi.Models;
 using BookStoreApi.Services;
 using Microsoft.AspNetCore.Http;
@@ -37,9 +38,9 @@ namespace BookStoreApi.Controllers
             return book;
         }
 
-        [HttpPost("purchase")]
         public async Task<IActionResult> PurchaseBook(int bookId, int customerId, int quantity)
         {
+            // Verifica se o livro existe
             var book = await _context.Books.FindAsync(bookId);
             var customer = await _context.Customers.FindAsync(customerId);
 
@@ -53,8 +54,14 @@ namespace BookStoreApi.Controllers
                 return BadRequest("Not enough stock.");
             }
 
+            // Calcula o preço final com desconto (se aplicável)
             var finalPrice = _bookService.CalculateDiscountedPrice(book, customer) * quantity;
-            return Ok(new { finalPrice });
+            var response = new FinalPriceDto
+            {
+                FinalPrice = finalPrice
+            };
+
+            return Ok(response);  // Retorna o preço final calculado
         }
     }
 }

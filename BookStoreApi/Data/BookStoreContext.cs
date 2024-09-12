@@ -19,8 +19,8 @@ namespace BookStoreApi.Data
             modelBuilder.Entity<Book>().HasData(new Book { Id = 1, Title = "1984", Price = 19.99m, StockQuantity = 50, AuthorId = 1 });
 
             modelBuilder.Entity<Customer>().HasData(
-                new Customer { Id = 1, Name = "John Doe", IsVip = true },
-                new Customer { Id = 2, Name = "Jane Doe", IsVip = false }
+                new Customer { Id = 10, Name = "John Doe", IsVip = true },
+                new Customer { Id = 20, Name = "Jane Doe", IsVip = false }
             );
         }
     }
